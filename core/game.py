@@ -12,7 +12,7 @@ class BaseGame:
         pygame.display.set_caption('Snake')
         pygame.font.init()
         self.size = self.width, self.height = width, height
-        self.screen = pygame.display.set_mode(self.size)
+        self.screen = pygame.display.set_mode(self.size,pygame.RESIZABLE)
         self.scenes = []
         self.scene = None
         self.clock = pygame.time.Clock()

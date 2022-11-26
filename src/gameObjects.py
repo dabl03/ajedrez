@@ -1,20 +1,37 @@
 import pygame
 from core.gameObject import GameObject
-
+"""@todo Cuando aumentas el tamaño las piezas no cambian la ubicación, mas bien se quedan asi siempre, una de la solucion que me imagino es hacer que cada pieza tenga su repectivas coordenadas y despues hacer que esas coordenadas determine el movimiento."""
+BLACK=False;
+WHITE=True;
+image_piece={
+    "pawn":[pygame.image.load('./pieces/PawnWhite.png'),pygame.image.load('./pieces/PawnBlack.png')],
+    "knight":[pygame.image.load('./pieces/KnightWhite.png'),pygame.image.load('./pieces/KnightBlack.png')],
+    "bishop":[pygame.image.load('./pieces/BishopWhite.png'),pygame.image.load('./pieces/BishopBlack.png')],
+    "rook":[pygame.image.load('./pieces/RookWhite.png'),pygame.image.load('./pieces/RookBlack.png')],
+    "queen":[pygame.image.load('./pieces/QueenWhite.png'),pygame.image.load('./pieces/QueenBlack.png')],
+    "king":[pygame.image.load('./pieces/KingWhite.png'),pygame.image.load('./pieces/KingBlack.png')]
+};
+WIDTH_COLS=12.5;# Este es el largo de la columnas, se esta usando porcentaje para que sea dinamico el tamaño de las filas.
+HEIGHT_COLS=12.5;# Este es el ancho de la columnas, tambien en porcentajes.
 class Chessboard(GameObject):
     def __init__(self, game, *args, **kwargs):
         super(Chessboard, self).__init__(game, *args, **kwargs)
-        self.cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-        n, m, positions = 0, 8, {}
-        for i in range(0, self.game.size[0], 50):
-            for j in range(0, self.game.size[1], 50):
-                center = i+25, j+25
-                positions[self.cols[n]+str(m)] = center
-                m-=1
-            n+=1
-            m = 8
-        self.positions = positions
-
+        """Aqui dibujaremos la tabla y crearemos las coordenadas.
+        game -- La ventana como tal"""
+        self.cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] #Columnas
+        self.update_coors(game.size[0],game.size[1]);
+    
+    def update_coors(self,width:int,height:int):
+        """Aqui creamos las coordenadas y ubicaciones de las piezas"""
+        x, y, self.positions = 0, 0, {}
+        self.width_cols=int((WIDTH_COLS*width)/100);#Calculamos el porcentaje y lo tansformamos a entero.
+        self.height_cols=int((HEIGHT_COLS*height)/100);
+        for x in range(len(self.cols)):
+            for y in range(0,8):
+                self.positions[self.cols[x]+str(y+1)] = (
+                        (self.width_cols*x)+int(self.width_cols/2), # Calculamos la posicion x actual
+                        (self.height_cols*y)+int(self.height_cols/2)); #Calculamos la posicion y actual
+    
     def letterOffset(self, letter, offset):
         try:
             i = self.cols.index(letter) + offset
@@ -30,11 +47,13 @@ class Chessboard(GameObject):
         return row
 
     def draw(self):
-        c = 1
-        for i in range(0, self.game.size[0], 50):
-            for j in range(0, self.game.size[1], 50):
-                if c == 1: pygame.draw.rect(self.game.screen, (255, 206, 158), (i, j,50,50)) #(204, 204, 255)
-                else: pygame.draw.rect(self.game.screen, (209, 139, 71), (i, j,50,50)) #(81, 157, 255)
+        """Aqui dibujamos el tablero."""
+        c = 1 # 1=white, -1 black.
+        for x in range(len(self.cols)):
+            for y in range(0,8):
+                pygame.draw.rect(self.game.screen,
+                    (255, 206, 158) if c==1 else (209, 139, 71), #White or black colors
+                    (x*self.width_cols, y*self.height_cols,self.width_cols,self.height_cols));#(81, 157, 255)
                 c *= -1
             c *= -1
 
@@ -47,31 +66,27 @@ class Team(GameObject):
     def __init__(self, game, chessboard, team=True, *args, **kwargs):
         super().__init__(game, *args, **kwargs)
         self.name = 'White' if team else 'Black'
-        self.value = True if team else False
-        pawnImage = pygame.image.load('./pieces/PawnWhite.png') if team else pygame.image.load('./pieces/PawnBlack.png')
-        knightImage = pygame.image.load('./pieces/KnightWhite.png') if team else pygame.image.load('./pieces/KnightBlack.png')
-        bishopImage = pygame.image.load('./pieces/BishopWhite.png') if team else pygame.image.load('./pieces/BishopBlack.png')
-        rookImage = pygame.image.load('./pieces/RookWhite.png') if team else pygame.image.load('./pieces/RookBlack.png')
-        queenImage = pygame.image.load('./pieces/QueenWhite.png') if team else pygame.image.load('./pieces/QueenBlack.png')
-        kingImage = pygame.image.load('./pieces/KingWhite.png') if team else pygame.image.load('./pieces/KingBlack.png')
+        self.value = team
+        White=0 if team else 1; #Es para saber si 
         self.chessboard = chessboard
+        print(self.chessboard)
         self.pieces = {
-            'pawn1': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'pawn2': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'pawn3': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'pawn4': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'pawn5': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'pawn6': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'pawn7': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'pawn8': Pawn(self.game, self, pawnImage, chessboard.positions),
-            'rook1': Piece(self.game, self, rookImage, chessboard.positions),
-            'rook2': Piece(self.game, self, rookImage, chessboard.positions),
-            'knight1': Piece(self.game, self, knightImage, chessboard.positions),
-            'knight2': Piece(self.game, self, knightImage, chessboard.positions),
-            'bishop1': Piece(self.game, self, bishopImage, chessboard.positions),
-            'bishop2': Piece(self.game, self, bishopImage, chessboard.positions),
-            'queen': Piece(self.game, self, queenImage, chessboard.positions),
-            'king': Piece(self.game, self, kingImage, chessboard.positions),
+            'pawn1': Pawn(self.game, self, chessboard.positions),
+            'pawn2': Pawn(self.game, self, chessboard.positions),
+            'pawn3': Pawn(self.game, self, chessboard.positions),
+            'pawn4': Pawn(self.game, self, chessboard.positions),
+            'pawn5': Pawn(self.game, self, chessboard.positions),
+            'pawn6': Pawn(self.game, self, chessboard.positions),
+            'pawn7': Pawn(self.game, self, chessboard.positions),
+            'pawn8': Pawn(self.game, self, chessboard.positions),
+            'rook1': Piece(self.game, self, image_piece["rook"][White], chessboard.positions),
+            'rook2': Piece(self.game, self, image_piece["rook"][White], chessboard.positions),
+            'knight1': Piece(self.game, self, image_piece["knight"][White], chessboard.positions),
+            'knight2': Piece(self.game, self, image_piece["knight"][White], chessboard.positions),
+            'bishop1': Piece(self.game, self, image_piece["bishop"][White], chessboard.positions),
+            'bishop2': Piece(self.game, self, image_piece["bishop"][White], chessboard.positions),
+            'queen': Piece(self.game, self, image_piece["queen"][White], chessboard.positions),
+            'king': Piece(self.game, self, image_piece["king"][White], chessboard.positions),
         }
         self.mount()
     
@@ -128,8 +143,8 @@ class Piece(GameObject):
         self.positions = positions
         self.team = team
         self.escaque = None
-        self.enemyPieces = []
-        self.alliedPiece = []
+        self.enemyPieces = [ ]
+        self.alliedPiece = [ ]
 
     def draw(self):
         if self.escaque in self.positions and self.live:
@@ -154,6 +169,12 @@ class Piece(GameObject):
         self.transform.setPosition(-500, -500)
 
 class Pawn(Piece):
+    def __init__(self, game, team, positions, *args, **kwargs):
+        Piece.__init__(self,game,team,image_piece["pawn"][0 if team.value else 1], positions, *args, **kwargs);
+        #Necesitamos que se mueva en el primer instante en dos o una casilla.
+        """class Piece(GameObject):
+            def __init__(self, game, team, image, positions, *args, **kwargs):"""
+
     def possibleMovements(self):
         i = 1 if self.team.value else -1
         movements = []
@@ -180,4 +201,26 @@ class Pawn(Piece):
         for position in positions:
             if position and position[1]:
                 movements.append(position[0])
+        print(movements)
         return movements
+
+class Rook(Piece):
+    def __init__(self):
+        super().__init__(self);
+        self.name="rook";
+
+class Knight(Piece):
+    def __init__(self):
+        super(Piece,self).__init__(self);
+
+class Bishop(Piece):
+    def __init__(self):
+        super(Piece,self).__init__(self);
+
+class Queen(Piece):
+    def __init__(self):
+        super(Piece,self).__init__(self);
+
+class King(Piece):
+    def __init__(self):
+        super(Piece,self).__init__(self);

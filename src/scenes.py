@@ -45,3 +45,5 @@ class MainScene(BaseScene):
                             else:
                                 print('It is not the turn of this team.')
                 print(self.turn)
+            elif event.type == pygame.VIDEORESIZE:
+                self.gameObjects['Chessboard'].update_coors(event.w,event.h);
